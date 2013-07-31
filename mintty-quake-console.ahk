@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.1
+; Version: 1.3
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
@@ -23,8 +23,8 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;				Preferences & Variables
 ;*******************************************************************************
-VERSION := 1.2
-iniFile := "mintty-quake-console.ini"
+VERSION := 1.3
+iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
@@ -60,11 +60,13 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;				Menu					
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-	Menu, Tray, Icon, terminal.ico
+	Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
+Menu, Tray, Default, Show/Hide
 Menu, Tray, Add, Enabled, ToggleScriptState
 Menu, Tray, Check, Enabled
 Menu, Tray, Add, Auto-Hide, ToggleAutoHide
@@ -95,10 +97,6 @@ init()
 		WinGet, hw_mintty, PID, ahk_class mintty
 	}
 	
-	TaskBarEdge := GetTaskbarEdge()
-	ScreenWidth := GetScreenWidth()
-	ScreenTop := GetScreenTop()
-	ScreenLeft := GetScreenLeft()
 	
 	WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
 	toggleScript("init")
@@ -126,13 +124,17 @@ toggle()
 
 Slide(Window, Dir)
 {
-	global animationStep, animationTimeout, autohide, isVisible, ScreenTop, ScreenLeft, ScreenWidth
+	global animationStep, animationTimeout, autohide, isVisible
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-	left := ScreenLeft + ((ScreenWidth - width) /  2)
-	If (Dir = "In") And (Ypos < 0)
-		WinShow %Window%
-	If (Xpos != %left%)
-		WinMove, %Window%,,%left%
+
+	VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+
+	If (Dir = "In") And (Ypos < ScreenTop)
+	{
+	  WinShow %Window%
+	  WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
+	  WinMove, %Window%,, WinLeft
+	}
 	Loop
 	{
 	  If (Dir = "In") And (Ypos >= ScreenTop) Or (Dir = "Out") And (Ypos <= (-WinHeight))
@@ -171,6 +173,8 @@ toggleScript(state) {
 		WinHide ahk_pid %hw_mintty%
 		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
+        VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+        
 		width := ScreenWidth * widthConsoleWindow / 100
 		left := ScreenLeft + ((ScreenWidth - width) /  2)
 		WinMove, ahk_pid %hw_mintty%, , %left%, -%heightConsoleWindow%, %width%, %heightConsoleWindow% ; resize/move
@@ -277,7 +281,9 @@ return
 ; IncreaseHeight:
 ^!NumpadAdd::
 	if(WinActive("ahk_pid" . hw_mintty)) {
-		if(heightConsoleWindow < A_ScreenHeight) {
+
+	VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+		if(heightConsoleWindow < ScreenHeight) {
 			heightConsoleWindow += animationStep
 			WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
 		}
@@ -396,67 +402,27 @@ OptionsGui() {
 ;   "right"
 ;   "bottom"
 ;   "left"
-GetTaskbarEdge() {
-  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
 
-  if (TW = A_ScreenWidth) { ; Vertical Taskbar
-    if (TY = 0) {
-      return "top"
-    } else {
-      return "bottom"
+VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
+{
+  Coordmode, Mouse, Screen
+    MouseGetPos,x,y
+    SysGet, m, MonitorCount
+    ; Iterate through all monitors.
+    Loop, %m%
+    {   ; Check if the window is on this monitor.
+      SysGet, Mon, Monitor, %A_Index%
+      SysGet, MonArea, MonitorWorkArea, %A_Index%
+	if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
+	{
+	mLeft:=MonAreaLeft
+	mTop:=MonAreaTop
+	mWidth:=(MonAreaRight - MonAreaLeft)
+	mHeight:=(MonAreaBottom - MonAreaTop)
+	}
     }
-  } else { ; Horizontal Taskbar
-    if (TX = 0) {
-      return "left"
-    } else {
-      return "right"
-    }
-  }
 }
 
-GetScreenTop() {
-  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
-  TaskbarEdge := GetTaskbarEdge()
-
-  if (TaskbarEdge = "top") {
-    return TH
-  } else {
-    return 0
-  }
-}
-
-GetScreenLeft() {
-  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
-  TaskbarEdge := GetTaskbarEdge()
-
-  if (TaskbarEdge = "left") {
-    return TW
-  } else {
-    return 0
-  }
-}
-
-GetScreenWidth() {
-  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
-  TaskbarEdge := GetTaskbarEdge()
-
-  if (TaskbarEdge = "top" or TaskbarEdge = "bottom") {
-    return A_ScreenWidth
-  } else {
-    return A_ScreenWidth - TW
-  }
-}
-
-GetScreenHeight() {
-  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
-  TaskbarEdge := GetTaskbarEdge()
-
-  if (TaskbarEdge = "top" or TaskbarEdge = "bottom") {
-    return A_ScreenHeight - TH
-  } else {
-    return A_ScreenHeight
-  }
-}
 /*
 ResizeAndCenter(w, h)
 {
