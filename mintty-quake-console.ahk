@@ -33,6 +33,8 @@ IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
+IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
+IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IfNotExist %iniFile%
@@ -124,12 +126,13 @@ toggle()
 
 Slide(Window, Dir)
 {
-	global animationStep, animationTimeout, autohide, isVisible
+	global animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+    WinSet, Transparent, %currentTrans%, %Window%
 
 	VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
-	If (Dir = "In") And (Ypos < ScreenTop)
+    If (Dir = "In") 
 	{
 	  WinShow %Window%
 	  WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
@@ -137,23 +140,44 @@ Slide(Window, Dir)
 	}
 	Loop
 	{
-	  If (Dir = "In") And (Ypos >= ScreenTop) Or (Dir = "Out") And (Ypos <= (-WinHeight))
+      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == 255)
+      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+
+	  If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
 		 Break
-	  
-	  dRate := animationStep
-	  dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
-	  WinMove, %Window%,,, dY
-	  WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+
+      if (animationModeFade = 1)
+      {
+        WinSet, Style, +0x040000, %Window% ; show window border
+          WinMove, %Window%,, WinLeft, ScreenTop
+          dRate := animationStep/300*255
+          dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
+          dT := (dT < 0) ? 0 : (dT > 255) ? 255 : dT
+
+          WinSet, Transparent, %dT%, %Window%
+          currentTrans := dT
+      }
+      else
+      {
+          WinSet, Style, -0x040000, %Window% ; show window border
+          dRate := animationStep
+          dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
+          WinMove, %Window%,,, dY
+      }
+      WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 	  Sleep, %animationTimeout%
 	}
 
-	If (Dir = "In") And (Ypos >= ScreenTop) {
+      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans >= 255)
+      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+
+	If (Dir = "In") And inConditional {
 		WinMove, %Window%,,, ScreenTop
 		if (autohide)
 			SetTimer, HideWhenInactive, 250
 		isVisible := True
 	}
-	If (Dir = "Out") And (Ypos <= (-WinHeight)) {
+	If (Dir = "Out") And outConditional {
 		WinHide %Window%
 		if (autohide)
 			SetTimer, HideWhenInactive, Off
@@ -170,6 +194,7 @@ toggleScript(state) {
 			init()
 			return
 		}
+        currentTrans := 255
 		WinHide ahk_pid %hw_mintty%
 		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
@@ -313,6 +338,8 @@ SaveSettings() {
 	IniWrite, %initialHeight%, %iniFile%, Display, initial_height
 	IniWrite, %initialWidth%, %iniFile%, Display, initial_width
 	IniWrite, %autohide%, %iniFile%, Display, autohide_by_default
+    IniWrite, %animationModeSlide%, %iniFile%, Display, animation_mode_slide
+    IniWrite, %animationModeFade%, %iniFile%, Display, animation_mode_fade
 	IniWrite, %animationStep%, %inifile%, Display, animation_step
 	IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
 	CheckWindowsStartup(startWithWindows)
@@ -349,17 +376,22 @@ OptionsGui() {
 		Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
 		Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
 		Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
-        	Gui, Add, CheckBox, x22 y180 w130 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
+        Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
 		Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
 		Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
 		Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
-	        Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
-	        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
-		Gui, Add, Text, x232 y170 w220 h20 , Animation Delta (px):
-		Gui, Add, Text, x232 y220 w220 h20 , Animation Time (ms):
-		Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-50, %animationStep%
-		Gui, Add, Slider, x232 y240 w220 h30 VanimationTimeout Range5-50, %animationTimeout%
-		Gui, Add, Text, x232 y280 w220 h20 +Center, Animation Speed = Delta / Time
+        Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
+        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
+
+		Gui, Add, GroupBox, x232 y150 w220 h50 , Animation Type:
+        Gui, Add, Radio, x252 y170 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
+        Gui, Add, Radio, x332 y170 w70 h20 VanimationModeFade Checked%animationModeFade%, Fade
+
+		Gui, Add, Text, x232 y210 w220 h20 , Animation Delta (px):
+		Gui, Add, Text, x232 y260 w220 h20 , Animation Time (ms):
+		Gui, Add, Slider, x232 y230 w220 h30 VanimationStep Range1-100 TickInterval20 , %animationStep%
+		Gui, Add, Slider, x232 y280 w220 h30 VanimationTimeout Range1-50 TickInterval10, %animationTimeout%
+		Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
 	}
 	; Generated using SmartGUI Creator 4.0
 	Gui, Show, h410 w482, TerminalHUD Options
