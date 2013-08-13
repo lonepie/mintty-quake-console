@@ -148,7 +148,7 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-        WinSet, Style, +0x040000, %Window% ; show window border
+        WinSet, Style, -0x040000, %Window% ; hide window border
           WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
@@ -159,7 +159,7 @@ Slide(Window, Dir)
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; show window border
+          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
