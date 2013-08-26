@@ -29,6 +29,8 @@ note: after manually changing the ini file, reload the script by right-clicking 
 
 **initial_width** = width (percentage of screen width) of the mintty console  
 
+**initial_trans** = transparency (range from 0 to 255) of the mintty console  
+
 **autohide_by_default** = set to 1 to automatically hide mintty when it loses focus
 
 **animation_step** = number of pixels to shift each step of the slide animation  

@@ -32,6 +32,7 @@ IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
+IniRead, initialTrans, %iniFile%, Display, initial_trans, 235 ; 0-255 stepping
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
 IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
 IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
@@ -126,13 +127,21 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
+    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-    if (animationModeFade = 1)
+
+    WinGet, Transparent, Transparent, %Window%
+    if Transparent =
+    {
+        ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
+        WinSet, Style, +0x040000, %Window% ; hide window border
         WinSet, Transparent, %currentTrans%, %Window%
+        WinSet, Style, -0x040000, %Window% ; hide window border
+    }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
+    ; Multi monitor support.  Always move to current window
     If (Dir = "In")
     {
       WinShow %Window%
@@ -141,7 +150,7 @@ Slide(Window, Dir)
     }
     Loop
     {
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == origTrans)
+      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
       outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
       If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
@@ -149,18 +158,17 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-        WinSet, Style, -0x040000, %Window% ; hide window border
+          ; Move to the top in cases where Slide was initially selected
           WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : (dT > origTrans) ? origTrans : dT
+          dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
 
           WinSet, Transparent, %dT%, %Window%
           currentTrans := dT
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
@@ -169,16 +177,13 @@ Slide(Window, Dir)
       Sleep, %animationTimeout%
     }
 
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans >= origTrans)
-      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
-
-    If (Dir = "In") And inConditional {
+    If (Dir = "In")  {
         WinMove, %Window%,,, ScreenTop
         if (autohide)
             SetTimer, HideWhenInactive, 250
         isVisible := True
     }
-    If (Dir = "Out") And outConditional {
+    If (Dir = "Out")  {
         WinHide %Window%
         if (autohide)
             SetTimer, HideWhenInactive, Off
@@ -195,8 +200,9 @@ toggleScript(state) {
             init()
             return
         }
-        ;currentTrans := 255
-        WinGet, origTrans, Transparent, ahk_pid %hw_mintty%
+        WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
+        currentTrans:=initialTrans
+
         WinHide ahk_pid %hw_mintty%
         WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
@@ -302,11 +308,9 @@ return
 ;*******************************************************************************
 #IfWinActive ahk_class mintty
 ; why this method doesn't work, I don't know...
-; Hotkey, IfWinActive, ahk_pid %hw_mintty%
-; Hotkey, ^!NumpadAdd, IncreaseHeight
-; Hotkey, ^!NumpadSub, DecreaseHeight
 ; IncreaseHeight:
 ^!NumpadAdd::
+^+=::
     if(WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
@@ -318,6 +322,7 @@ return
 return
 ; DecreaseHeight:
 ^!NumpadSub::
+^+-::
     if(WinActive("ahk_pid" . hw_mintty)) {
         if(heightConsoleWindow > 100) {
             heightConsoleWindow -= animationStep
@@ -339,6 +344,7 @@ SaveSettings() {
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
     IniWrite, %initialHeight%, %iniFile%, Display, initial_height
     IniWrite, %initialWidth%, %iniFile%, Display, initial_width
+    IniWrite, %initialTrans%, %iniFile%, Display, initial_trans
     IniWrite, %autohide%, %iniFile%, Display, autohide_by_default
     IniWrite, %animationModeSlide%, %iniFile%, Display, animation_mode_slide
     IniWrite, %animationModeFade%, %iniFile%, Display, animation_mode_fade
@@ -367,9 +373,9 @@ OptionsGui() {
     global
     If not WinExist("ahk_id" GuiID) {
         Gui, Add, GroupBox, x12 y10 w450 h110 , General
-            Gui, Add, GroupBox, x12 y130 w450 h220 , Display
-        Gui, Add, Button, x242 y360 w100 h30 Default, Save
-        Gui, Add, Button, x362 y360 w100 h30 , Cancel
+            Gui, Add, GroupBox, x12 y130 w450 h250 , Display
+        Gui, Add, Button, x242 y390 w100 h30 Default, Save
+        Gui, Add, Button, x362 y390 w100 h30 , Cancel
         Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
         Gui, Add, Edit, x92 y30 w250 h20 VminttyPath, %minttyPath%
         Gui, Add, Button, x352 y30 w100 h20, Browse
@@ -385,18 +391,20 @@ OptionsGui() {
         Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
         Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
 
-        Gui, Add, GroupBox, x232 y150 w220 h50 , Animation Type:
-        Gui, Add, Radio, x252 y170 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
-        Gui, Add, Radio, x332 y170 w70 h20 VanimationModeFade Checked%animationModeFade%, Fade
+        Gui, Add, GroupBox, x232 y150 w220 h45 , Animation Type:
+        Gui, Add, Radio, x252 y168 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
+        Gui, Add, Radio, x332 y168 w70 h20 VanimationModeFade Checked%animationModeFade%, Fade
 
         Gui, Add, Text, x232 y210 w220 h20 , Animation Delta (px):
         Gui, Add, Text, x232 y260 w220 h20 , Animation Time (ms):
         Gui, Add, Slider, x232 y230 w220 h30 VanimationStep Range1-100 TickInterval20 , %animationStep%
         Gui, Add, Slider, x232 y280 w220 h30 VanimationTimeout Range1-50 TickInterval10, %animationTimeout%
-        Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
+        Gui, Add, Text, x232 y310 w220 h20 , Window Transparency (`%):
+        Gui, Add, Slider, x232 y330 w220 h30 VinitialTrans Range100-255 , %initialTrans%
+        ; Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
     }
     ; Generated using SmartGUI Creator 4.0
-    Gui, Show, h410 w482, TerminalHUD Options
+    Gui, Show, h440 w482, TerminalHUD Options
     Gui, +LastFound
     GuiID := WinExist()
 
