@@ -129,12 +129,14 @@ Slide(Window, Dir)
 {
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-
-    WinGet, Transparent, Transparent, %Window%
-    if Transparent =
+    
+    ;WinGet, Transparent, Transparent, %Window%
+    ;if Transparent =
+    ; "Transparent" above was never getting set to 0
+    if (animationModeFade and currentTrans = 0)
     {
         ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
-        WinSet, Style, +0x040000, %Window% ; hide window border
+        WinSet, Style, +0x040000, %Window% ; show window border
         WinSet, Transparent, %currentTrans%, %Window%
         WinSet, Style, -0x040000, %Window% ; hide window border
     }
@@ -158,7 +160,6 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-          ; Move to the top in cases where Slide was initially selected
           WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
@@ -169,6 +170,7 @@ Slide(Window, Dir)
       }
       else
       {
+          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
