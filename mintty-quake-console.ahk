@@ -23,7 +23,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION := 1.3
+VERSION := 1.4
 iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
@@ -43,9 +43,7 @@ IfNotExist %iniFile%
     SaveSettings()
 }
 
-; path to mintty (same folder as script), start with default shell
-; minttyPath := cygwinBinDir . "\mintty.exe -"
-; minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
+; path to mintty
 minttyPath_args := minttyPath . " " . minttyArgs
 
 ; initial height and width of console window
@@ -130,18 +128,24 @@ Slide(Window, Dir)
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     
-    ;WinGet, Transparent, Transparent, %Window%
-    ;if Transparent =
-    ; "Transparent" above was never getting set to 0
-    if (animationModeFade and currentTrans = 0)
+    WinGet, testTrans, Transparent, %Window%
+    if (testTrans = "" or (animationModeFade and currentTrans = 0))
     {
         ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
         WinSet, Style, +0x040000, %Window% ; show window border
         WinSet, Transparent, %currentTrans%, %Window%
         WinSet, Style, -0x040000, %Window% ; hide window border
+        ; this problem seems to happen if mintty's transparency is set to "Off"
+        ; mintty will lose transparency when the window loses focus, so it's best to just use
+        ; mintty's built in transparency setting
     }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+    
+    if (animationModeFade)
+    {
+        WinMove, %Window%,, WinLeft, ScreenTop
+    }
 
     ; Multi monitor support.  Always move to current window
     If (Dir = "In")
@@ -160,7 +164,6 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-          WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
           dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
@@ -201,6 +204,11 @@ toggleScript(state) {
             init()
             return
         }
+        
+        ; use mintty's transparency setting, if it's set
+        WinGet, minttyTrans, Transparent, ahk_pid %hw_mintty%
+        if (minttyTrans <> "")
+            initialTrans:=minttyTrans
         WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
         currentTrans:=initialTrans
 
