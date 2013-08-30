@@ -170,7 +170,6 @@ Slide(Window, Dir)
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
