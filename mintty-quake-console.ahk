@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.3
+; Version: 1.5
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
@@ -23,7 +23,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION := 1.4
+VERSION = 1.5
 iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
@@ -61,7 +61,7 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-    Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
+Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
@@ -127,7 +127,7 @@ Slide(Window, Dir)
 {
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-    
+
     WinGet, testTrans, Transparent, %Window%
     if (testTrans = "" or (animationModeFade and currentTrans = 0))
     {
@@ -141,7 +141,7 @@ Slide(Window, Dir)
     }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-    
+
     if (animationModeFade)
     {
         WinMove, %Window%,, WinLeft, ScreenTop
@@ -204,7 +204,7 @@ toggleScript(state) {
             init()
             return
         }
-        
+
         ; use mintty's transparency setting, if it's set
         WinGet, minttyTrans, Transparent, ahk_pid %hw_mintty%
         if (minttyTrans <> "")
@@ -345,10 +345,40 @@ return
 ;*******************************************************************************
 ;               Options
 ;*******************************************************************************
-SaveSettings() {
+SaveSettings()
+{
     global
     IniWrite, %minttyPath%, %iniFile%, General, mintty_path
     IniWrite, %minttyArgs%, %iniFile%, General, mintty_args
+
+    ; Special case : If there is no key entered and both windows key and control key are checked
+    If (consoleHotkey == "" and ControlKey and WindowsKey)
+    {
+        consoleHotkey = ^LWin
+    }
+    Else If (consoleHotkey != "")
+    {
+        ; If the Windows Key checkbox is checked and there isn't already the Windows key in the hotkey string, we add it
+        If (WindowsKey)
+        {
+            IfNotInString, consoleHotkey, #
+                consoleHotkey = #%consoleHotkey%
+        }
+
+        ; If the Control Key checkbox is checked and there isn't already the Control key in the hotkey string, we add it
+        lIf (ControlKey)
+        {
+            IfNotInString, consoleHotkey, ^
+                consoleHotkey = ^%consoleHotkey%
+        }
+
+    }
+    ; In case the hotkey is empty and only one of the checkbox is checked, we put back the default value
+    Else
+    {
+        consoleHotkey = ^``
+    }
+
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
@@ -383,7 +413,7 @@ OptionsGui() {
     global
     If not WinExist("ahk_id" GuiID) {
         Gui, Add, GroupBox, x12 y10 w450 h110 , General
-            Gui, Add, GroupBox, x12 y130 w450 h250 , Display
+        Gui, Add, GroupBox, x12 y130 w450 h250 , Display
         Gui, Add, Button, x242 y390 w100 h30 Default, Save
         Gui, Add, Button, x362 y390 w100 h30 , Cancel
         Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
@@ -392,6 +422,16 @@ OptionsGui() {
         Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
         Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
         Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
+        Gui, Add, Text, x232 y92 w10 h10, +
+        Gui, Add, CheckBox, x245 y89 w90 h20 VWindowsKey, Windows Key
+        Gui, Add, Text, x340 y92 w10 h10, +
+        Gui, Add, CheckBox, x360 y89 w80 h20 VControlKey, Control Key
+        ; If there is a # (Windows Key) in the consoleHotkey var, we remove it, as the Hotkey control doesn't support it, and we check the Windows Key checkbox
+        IfInString, consoleHotkey, #
+        {
+            GuiControl, , WindowsKey, 1
+            StringReplace, consoleHotkey, consoleHotkey, # , , All
+        }
         Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
         Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
         Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
