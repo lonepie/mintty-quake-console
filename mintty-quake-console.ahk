@@ -152,7 +152,7 @@ Slide(Window, Dir)
     {
       WinShow %Window%
       WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
-      WinMove, %Window%,, WinLeft
+      WinMove, %Window%, , WinLeft, , ScreenWidth
     }
     Loop
     {
