@@ -275,6 +275,7 @@ ToggleAutoHide:
     autohide := !autohide
     Menu, Tray, ToggleCheck, Auto-Hide
     SetTimer, HideWhenInactive, Off
+    SaveSettings()
 return
 
 ConsoleHotkey:
