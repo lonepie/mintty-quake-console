@@ -23,7 +23,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION = 1.5
+VERSION = 1.6
 iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
@@ -43,6 +43,9 @@ IfNotExist %iniFile%
     SaveSettings()
 }
 
+minttyPath := ExpandEnvVars(minttyPath)
+minttyArgs := ExpandEnvVars(minttyArgs)
+SplitPath, minttyPath, , cygwinBinDir
 ; path to mintty
 minttyPath_args := minttyPath . " " . minttyArgs
 
@@ -91,8 +94,13 @@ init()
     ; get last active window
     WinGet, hw_current, ID, A
     if !WinExist("ahk_class mintty") {
+        hw_mintty = 0
         Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
-        WinWait ahk_pid %hw_mintty%
+        WinWait ahk_pid %hw_mintty%, , 1
+        if ErrorLevel {
+          ; WinWait Timed out (WHY?!?)
+          WinGet, hw_mintty, PID, ahk_exe %minttyPath%
+        }
     }
     else {
         WinGet, hw_mintty, PID, ahk_class mintty
@@ -513,6 +521,12 @@ VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
     mHeight:=(MonAreaBottom - MonAreaTop)
     }
     }
+}
+ExpandEnvVars(ppath)
+{
+	VarSetCapacity(dest, 2000)
+	DllCall("ExpandEnvironmentStrings", "str", ppath, "str", dest, int, 1999, "Cdecl int")
+	return dest
 }
 
 /*
