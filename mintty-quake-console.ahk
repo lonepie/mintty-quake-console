@@ -45,7 +45,11 @@ IfNotExist %iniFile%
 
 minttyPath := ExpandEnvVars(minttyPath)
 minttyArgs := ExpandEnvVars(minttyArgs)
-SplitPath, minttyPath, , cygwinBinDir
+
+; wsltty instead of cygwin
+if InStr(minttyPath, "wsltty")
+  SplitPath, minttyPath, , cygwinBinDir
+
 ; path to mintty
 minttyPath_args := minttyPath . " " . minttyArgs
 
@@ -64,7 +68,7 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
+  Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
