@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.5
+; Version: 1.6
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
