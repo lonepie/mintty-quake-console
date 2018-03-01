@@ -28,6 +28,9 @@ theme: jekyll-theme-hacker
 plugins:
   - jekyll-feed
 
+show_downloads: "true"
+google_analytics: UA-114764190-2
+
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
