@@ -10,30 +10,30 @@ download latest release and run ```mintty-quake-console.exe``` (or, if you have 
 
 right click mintty-quake-console icon in system tray -> "Options"
 
-press __ctrl + ~__ (or configured keybinding) to toggle console
+press ```Ctrl + ~``` (or configured keybinding) to toggle console
 
 note: after editing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
 
 ## Ini/Option Reference
-**mintty_path** = path to mintty.exe  
+**mintty_path** = path to mintty.exe
 
-**mintty_args** = arguments to pass to mintty.exe  
+**mintty_args** = arguments to pass to mintty.exe
 
 **hotkey** = key combination to show/hide console ([AutoHotkey format](https://www.autohotkey.com/docs/Hotkeys.htm))
 
 **start_with_windows** = add this script to Windows startup (1) or disable (0)
 
-**start_hidden** = show mintty.exe when script is started (0) or wait for hotkey (1)  
+**start_hidden** = show mintty.exe when script is started (0) or wait for hotkey (1)
 
-**initial_height** = height (in pixels) of the mintty console  
+**initial_height** = height (in pixels) of the mintty console
 
-**initial_width** = width (percentage of screen width) of the mintty console  
+**initial_width** = width (percentage of screen width) of the mintty console
 
-**initial_trans** = transparency (range from 0 to 255) of the mintty console  
+**initial_trans** = transparency (range from 0 to 255) of the mintty console
 
 **autohide_by_default** = set to 1 to automatically hide mintty when it loses focus
 
-**animation_step** = number of pixels to shift each step of the slide animation  
+**animation_step** = number of pixels to shift each step of the slide animation
 
 **animation_timeout** = how long (in ms) to wait between each animation_step
 
@@ -57,7 +57,7 @@ Append shell path to ```mintty_args```:
 mintty_args=--WSL= --configdir="%APPDATA%\wsltty" -~ /usr/bin/fish -li
 ```
 
-### Cygwin non-default shell
+#### Cygwin non-default shell
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
 ```
 mintty_args=/bin/zsh -li
