@@ -27,7 +27,7 @@ theme: jekyll-theme-minimal
 #plugins:
 #  - jekyll-feed
 
-show_downloads: "false"
+show_downloads: false
 google_analytics: UA-114764190-2
 
 # Exclude from processing.
