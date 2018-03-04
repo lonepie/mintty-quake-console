@@ -47,8 +47,6 @@ note: after editing the ini file, reload the script by right-clicking the tray i
 
 **animation_mode_fade** = set to 1 to use fading animation (in/out)
 
-**window_borders** = set to 1 to keep window borders on mintty
-
 ## Tips
 
 Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
