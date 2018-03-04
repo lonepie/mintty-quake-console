@@ -1,11 +1,32 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.3
+; Version: 1.7
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
 ;   Originally forked from: https://github.com/marcharding/mintty-quake-console
-;   mintty: http://code.google.com/p/mintty/
+;   mintty: https://github.com/mintty/
 ;   Visor: http://visor.binaryage.com/
+;
+; MIT License
+; Copyright (c) 2018 Jon Rogers
+
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
 
 ;*******************************************************************************
 ;               Settings
@@ -23,7 +44,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION := 1.4
+VERSION = 1.7
 iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
@@ -38,10 +59,23 @@ IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
 IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
-IfNotExist %iniFile%
+IniRead, windowBorders, %iniFile%, Display, window_borders, 0
+if !FileExist(iniFile)
 {
     SaveSettings()
 }
+else
+{
+    ; add/remove windows startup if needed
+    CheckWindowsStartup(startWithWindows)
+}
+
+minttyPath := ExpandEnvVars(minttyPath)
+minttyArgs := ExpandEnvVars(minttyArgs)
+
+; wsltty instead of cygwin
+if InStr(minttyPath, "wsltty")
+  SplitPath, minttyPath, , cygwinBinDir
 
 ; path to mintty
 minttyPath_args := minttyPath . " " . minttyArgs
@@ -61,7 +95,7 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-    Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
+  Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
@@ -91,8 +125,13 @@ init()
     ; get last active window
     WinGet, hw_current, ID, A
     if !WinExist("ahk_class mintty") {
+        hw_mintty = 0
         Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
-        WinWait ahk_pid %hw_mintty%
+        WinWait ahk_pid %hw_mintty%, , 1
+        if ErrorLevel {
+          ; WinWait Timed out (WHY?!?)
+          WinGet, hw_mintty, PID, ahk_exe %minttyPath%
+        }
     }
     else {
         WinGet, hw_mintty, PID, ahk_class mintty
@@ -127,21 +166,22 @@ Slide(Window, Dir)
 {
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-    
+
     WinGet, testTrans, Transparent, %Window%
     if (testTrans = "" or (animationModeFade and currentTrans = 0))
     {
         ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
         WinSet, Style, +0x040000, %Window% ; show window border
         WinSet, Transparent, %currentTrans%, %Window%
-        WinSet, Style, -0x040000, %Window% ; hide window border
+        if (!windowBorders)
+            WinSet, Style, -0x040000, %Window% ; hide window border
         ; this problem seems to happen if mintty's transparency is set to "Off"
         ; mintty will lose transparency when the window loses focus, so it's best to just use
         ; mintty's built in transparency setting
     }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-    
+
     if (animationModeFade)
     {
         WinMove, %Window%,, WinLeft, ScreenTop
@@ -152,7 +192,7 @@ Slide(Window, Dir)
     {
       WinShow %Window%
       WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
-      WinMove, %Window%,, WinLeft
+      WinMove, %Window%, , WinLeft, , ScreenWidth
     }
     Loop
     {
@@ -204,7 +244,7 @@ toggleScript(state) {
             init()
             return
         }
-        
+
         ; use mintty's transparency setting, if it's set
         WinGet, minttyTrans, Transparent, ahk_pid %hw_mintty%
         if (minttyTrans <> "")
@@ -213,7 +253,8 @@ toggleScript(state) {
         currentTrans:=initialTrans
 
         WinHide ahk_pid %hw_mintty%
-        WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
+        if (!windowBorders)
+            WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
@@ -275,6 +316,7 @@ ToggleAutoHide:
     autohide := !autohide
     Menu, Tray, ToggleCheck, Auto-Hide
     SetTimer, HideWhenInactive, Off
+    SaveSettings()
 return
 
 ConsoleHotkey:
@@ -339,15 +381,59 @@ return
         }
     }
 return
+; Toggle window borders
+^!NumpadDiv::
+    WinSet, Style, ^0xC40000, ahk_pid %hw_mintty%
+    windowBorders := !windowBorders
+return
+; Save Height & border state to ini
+^!NumpadMult::
+    IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
+    IniWrite, %windowBorders%, %iniFile%, Display, window_borders
+return
+; Toggle script on/off
+^!NumpadDot::
+    ToggleScriptState()
+return
 #IfWinActive
 
 ;*******************************************************************************
 ;               Options
 ;*******************************************************************************
-SaveSettings() {
+SaveSettings()
+{
     global
     IniWrite, %minttyPath%, %iniFile%, General, mintty_path
     IniWrite, %minttyArgs%, %iniFile%, General, mintty_args
+
+    ; Special case : If there is no key entered and both windows key and control key are checked
+    If (consoleHotkey == "" and ControlKey and WindowsKey)
+    {
+        consoleHotkey = ^LWin
+    }
+    Else If (consoleHotkey != "")
+    {
+        ; If the Windows Key checkbox is checked and there isn't already the Windows key in the hotkey string, we add it
+        If (WindowsKey)
+        {
+            IfNotInString, consoleHotkey, #
+                consoleHotkey = #%consoleHotkey%
+        }
+
+        ; If the Control Key checkbox is checked and there isn't already the Control key in the hotkey string, we add it
+        If (ControlKey)
+        {
+            IfNotInString, consoleHotkey, ^
+                consoleHotkey = ^%consoleHotkey%
+        }
+
+    }
+    ; In case the hotkey is empty and only one of the checkbox is checked, we put back the default value
+    Else
+    {
+        consoleHotkey = ^``
+    }
+
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
@@ -382,7 +468,7 @@ OptionsGui() {
     global
     If not WinExist("ahk_id" GuiID) {
         Gui, Add, GroupBox, x12 y10 w450 h110 , General
-            Gui, Add, GroupBox, x12 y130 w450 h250 , Display
+        Gui, Add, GroupBox, x12 y130 w450 h250 , Display
         Gui, Add, Button, x242 y390 w100 h30 Default, Save
         Gui, Add, Button, x362 y390 w100 h30 , Cancel
         Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
@@ -391,6 +477,16 @@ OptionsGui() {
         Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
         Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
         Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
+        Gui, Add, Text, x232 y92 w10 h10, +
+        Gui, Add, CheckBox, x245 y89 w90 h20 VWindowsKey, Windows Key
+        Gui, Add, Text, x340 y92 w10 h10, +
+        Gui, Add, CheckBox, x360 y89 w80 h20 VControlKey, Control Key
+        ; If there is a # (Windows Key) in the consoleHotkey var, we remove it, as the Hotkey control doesn't support it, and we check the Windows Key checkbox
+        IfInString, consoleHotkey, #
+        {
+            GuiControl, , WindowsKey, 1
+            StringReplace, consoleHotkey, consoleHotkey, # , , All
+        }
         Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
         Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
         Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
@@ -472,6 +568,12 @@ VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
     mHeight:=(MonAreaBottom - MonAreaTop)
     }
     }
+}
+ExpandEnvVars(ppath)
+{
+	VarSetCapacity(dest, 2000)
+	DllCall("ExpandEnvironmentStrings", "str", ppath, "str", dest, int, 1999, "Cdecl int")
+	return dest
 }
 
 /*
