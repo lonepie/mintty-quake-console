@@ -404,7 +404,7 @@ SaveSettings()
         }
 
         ; If the Control Key checkbox is checked and there isn't already the Control key in the hotkey string, we add it
-        lIf (ControlKey)
+        If (ControlKey)
         {
             IfNotInString, consoleHotkey, ^
                 consoleHotkey = ^%consoleHotkey%
