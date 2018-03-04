@@ -3,23 +3,26 @@
 An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style terminal-on-a-hotkey for [mintty](https://github.com/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X or [Tilda](https://github.com/lanoxx/tilda)/[Guake](http://guake.org/) on Linux)
 
 ## Requirements
+
 - [mintty](https://github.com/mintty/) (installed through [Cygwin](http://www.cygwin.com), [MSYS](http://www.mingw.org/wiki/MSYS) or [wsltty](https://github.com/mintty/wsltty))
 
 ## Usage
-download latest release and run ```mintty-quake-console.exe``` (or, if you have AutoHotkey installed, run the ```mintty-quake-console.ahk``` file directly).
+
+download latest release and run `mintty-quake-console.exe` (or, if you have AutoHotkey installed, run the `mintty-quake-console.ahk` file directly).
 
 right click mintty-quake-console icon in system tray -> "Options"
 
-press ```Ctrl + ~``` (or configured keybinding) to toggle console
+press `Ctrl + ~` (or configured keybinding) to toggle console
 
 note: after editing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
 
 ## Ini/Option Reference
+
 **mintty_path** = path to mintty.exe
 
 **mintty_args** = arguments to pass to mintty.exe
 
-**hotkey** = key combination to show/hide console ([AutoHotkey format](https://www.autohotkey.com/docs/Hotkeys.htm))
+**hotkey** = key combination to show/hide console ([AutoHotkey format](https://www.autohotkey.com/docs/Hotkeys.htm) & [Keylist](https://www.autohotkey.com/docs/KeyList.htm))
 
 **start_with_windows** = add this script to Windows startup (1) or disable (0)
 
@@ -41,33 +44,45 @@ note: after editing the ini file, reload the script by right-clicking the tray i
 
 **animation_mode_fade** = set to 1 to use fading animation (in/out)
 
+**window_borders** = set to 1 to keep window borders on mintty
+
 ## Tips
 
 Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
 
 ### Use with [wsltty](https://github.com/mintty/wsltty)
+
 Essentially, copy the settings from the shortcut(s) created by wsltty:
-```
+
+```ini
 mintty_path=%LOCALAPPDATA%\wsltty\bin\mintty.exe
 mintty_args=--WSL= --configdir="%APPDATA%\wsltty" -~
 ```
+
 #### wsltty non-default shell
-Append shell path to ```mintty_args```:
-```
+
+Append shell path to `mintty_args`:
+
+```ini
 mintty_args=--WSL= --configdir="%APPDATA%\wsltty" -~ /usr/bin/fish -li
 ```
 
 #### Cygwin non-default shell
+
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
-```
+
+```ini
 mintty_args=/bin/zsh -li
 ```
 
 ### Tabs
+
 Use tmux
 
 ### My mintty settings settings (old)
+
 Download my [minttyrc](https://github.com/lonepie/dotfiles/raw/master/minttyrc) for my font/color settings
-```
-$ wget -O ~/.minttyrc https://github.com/lonepie/dotfiles/raw/master/minttyrc
+
+```sh
+wget -O ~/.minttyrc https://github.com/lonepie/dotfiles/raw/master/minttyrc
 ```
