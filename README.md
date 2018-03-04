@@ -48,7 +48,11 @@ note: after editing the ini file, reload the script by right-clicking the tray i
 
 ## Tips
 
-Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
+### Additional Hotkeys
+
+**Ctrl+Alt+Numpad(+)** increase console height
+
+**Ctrl+Alt+Numpad(-)** decrease console height
 
 **Ctrl+Alt+Numpad(/)** toggle window borders
 
