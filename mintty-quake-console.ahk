@@ -45,7 +45,8 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;               Preferences & Variables
 ;*******************************************************************************
 VERSION = 1.7
-iniFile := A_ScriptDir . "\mintty-quake-console.ini"
+scriptName := "mintty-quake-console"
+iniFile := A_ScriptDir . "\" . scriptName . ".ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
@@ -95,10 +96,10 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-  Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
+  Menu, Tray, Icon, %A_ScriptDir%\%scriptName%.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
-Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Tip, %scriptName% %VERSION%
 Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Default, Show/Hide
@@ -335,7 +336,7 @@ return
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
-        MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
+        MsgBox, 4, %scriptName%, Are you sure you want to exit?
         IfMsgBox, No
             return
         toggleScript("off")
@@ -347,7 +348,7 @@ Reload
 return
 
 AboutDlg:
-    MsgBox, 64, About, mintty-quake-console AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
+    MsgBox, 64, About, %scriptName% AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
 return
 
 ShowOptionsGui:
@@ -393,7 +394,7 @@ return
 return
 ; Toggle script on/off
 ^!NumpadDot::
-    ToggleScriptState()
+    GoSub, ToggleScriptState
 return
 #IfWinActive
 
@@ -509,7 +510,7 @@ OptionsGui() {
         ; Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
     }
     ; Generated using SmartGUI Creator 4.0
-    Gui, Show, h440 w482, TerminalHUD Options
+    Gui, Show, h440 w482, %scriptName% Options
     Gui, +LastFound
     GuiID := WinExist()
 
