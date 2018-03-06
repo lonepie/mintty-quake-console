@@ -45,8 +45,8 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;               Preferences & Variables
 ;*******************************************************************************
 VERSION = 1.7
-scriptName := "mintty-quake-console"
-iniFile := A_ScriptDir . "\" . scriptName . ".ini"
+SCRIPTNAME := "mintty-quake-console"
+iniFile := A_ScriptDir . "\" . SCRIPTNAME . ".ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
@@ -96,10 +96,10 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-  Menu, Tray, Icon, %A_ScriptDir%\%scriptName%.ico
+  Menu, Tray, Icon, %A_ScriptDir%\%SCRIPTNAME%.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
-Menu, Tray, Tip, %scriptName% %VERSION%
+Menu, Tray, Tip, %SCRIPTNAME% %VERSION%
 Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Default, Show/Hide
@@ -336,7 +336,7 @@ return
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
-        MsgBox, 4, %scriptName%, Are you sure you want to exit?
+        MsgBox, 4, %SCRIPTNAME%, Are you sure you want to exit?
         IfMsgBox, No
             return
         toggleScript("off")
@@ -348,7 +348,7 @@ Reload
 return
 
 AboutDlg:
-    MsgBox, 64, About, %scriptName% AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
+    MsgBox, 64, About, %SCRIPTNAME% AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
 return
 
 ShowOptionsGui:
@@ -510,7 +510,7 @@ OptionsGui() {
         ; Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
     }
     ; Generated using SmartGUI Creator 4.0
-    Gui, Show, h440 w482, %scriptName% Options
+    Gui, Show, h440 w482, %SCRIPTNAME% Options
     Gui, +LastFound
     GuiID := WinExist()
 
