@@ -1,6 +1,6 @@
 # mintty-quake-console
 
-An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style terminal-on-a-hotkey for [mintty](https://github.com/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X or [Tilda](https://github.com/lanoxx/tilda)/[Guake](http://guake.org/) on Linux)
+An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style terminal-on-a-hotkey for [mintty](https://github.com/mintty/) (like [Tilda](https://github.com/lanoxx/tilda) or [Guake](http://guake.org/) on Linux)
 
 ## Requirements
 
@@ -8,13 +8,13 @@ An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style te
 
 ## Usage
 
-download latest release and run `mintty-quake-console.exe` (or, if you have AutoHotkey installed, run the `mintty-quake-console.ahk` file directly).
+[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone this repository and run the `mintty-quake-console.ahk` script directly).
 
-right click mintty-quake-console icon in system tray -> "Options"
+**Options:** Right click the mintty-quake-console icon in system tray & select _Options_
 
-press `Ctrl + ~` (or configured keybinding) to toggle console
+Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
-note: after editing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
+**Note:** after editing the ini file, reload the script by right-clicking the tray icon and selecting _Reload_
 
 ## Ini/Option Reference
 
@@ -89,10 +89,3 @@ mintty_args=/bin/zsh -li
 
 Use tmux
 
-### My mintty settings settings (old)
-
-Download my [minttyrc](https://github.com/lonepie/dotfiles/raw/master/minttyrc) for my font/color settings
-
-```sh
-wget -O ~/.minttyrc https://github.com/lonepie/dotfiles/raw/master/minttyrc
-```

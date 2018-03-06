@@ -240,7 +240,7 @@ toggleScript(state) {
     ; enable/disable script effects, hotkeys, etc
     global
     ; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
-    if(state = "on" or state = "init") {
+    if (state = "on" or state = "init") {
         If !WinExist("ahk_pid" . hw_mintty) {
             init()
             return
@@ -295,7 +295,7 @@ HideWhenInactive:
 return
 
 ToggleVisible:
-    if(isVisible)
+    if (isVisible)
     {
         Slide("ahk_pid" . hw_mintty, "Out")
     }
@@ -307,7 +307,7 @@ ToggleVisible:
 return
 
 ToggleScriptState:
-    if(scriptEnabled)
+    if (scriptEnabled)
         toggleScript("off")
     else
         toggleScript("on")
@@ -321,7 +321,7 @@ ToggleAutoHide:
 return
 
 ConsoleHotkey:
-    If (scriptEnabled) {
+    if (scriptEnabled) {
         IfWinExist ahk_pid %hw_mintty%
         {
             toggle()
@@ -363,10 +363,10 @@ return
 ; IncreaseHeight:
 ^!NumpadAdd::
 ^+=::
-    if(WinActive("ahk_pid" . hw_mintty)) {
+    if (WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-        if(heightConsoleWindow < ScreenHeight) {
+        if (heightConsoleWindow < ScreenHeight) {
             heightConsoleWindow += animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
@@ -375,13 +375,28 @@ return
 ; DecreaseHeight:
 ^!NumpadSub::
 ^+-::
-    if(WinActive("ahk_pid" . hw_mintty)) {
-        if(heightConsoleWindow > 100) {
+    if (WinActive("ahk_pid" . hw_mintty)) {
+        if (heightConsoleWindow > 100) {
             heightConsoleWindow -= animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
 return
+; We'll need to move the window AND calculate width, it's not as simple as height
+; Decrease Width
+; ^![::
+;     if (widthConsoleWindow >= 20) {
+;         widthConsoleWindow -= 10
+;         WinMove, ahk_pid %hw_mintty%,,,, widthConsoleWindow
+;     }
+; return
+; Increase Width
+; ^!]::
+;     if (widthConsoleWindow <= 100) {
+;         widthConsoleWindow += 10
+;         WinMove, ahk_pid %hw_mintty%,,,, widthConsoleWindow
+;     }
+; return
 ; Toggle window borders
 ^!NumpadDiv::
     WinSet, Style, ^0xC40000, ahk_pid %hw_mintty%
@@ -390,6 +405,7 @@ return
 ; Save Height & border state to ini
 ^!NumpadMult::
     IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
+    ; IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
     IniWrite, %windowBorders%, %iniFile%, Display, window_borders
 return
 ; Toggle script on/off
@@ -459,7 +475,7 @@ CheckWindowsStartup(enable) {
         }
     }
     else {
-        if(!enable) {
+        if (!enable) {
             FileDelete, %LinkFile%
         }
     }
@@ -553,21 +569,21 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-  Coordmode, Mouse, Screen
+    Coordmode, Mouse, Screen
     MouseGetPos,x,y
     SysGet, m, MonitorCount
     ; Iterate through all monitors.
     Loop, %m%
     {   ; Check if the window is on this monitor.
-      SysGet, Mon, Monitor, %A_Index%
-      SysGet, MonArea, MonitorWorkArea, %A_Index%
-    if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
-    {
-    mLeft:=MonAreaLeft
-    mTop:=MonAreaTop
-    mWidth:=(MonAreaRight - MonAreaLeft)
-    mHeight:=(MonAreaBottom - MonAreaTop)
-    }
+        SysGet, Mon, Monitor, %A_Index%
+        SysGet, MonArea, MonitorWorkArea, %A_Index%
+        if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
+        {
+            mLeft:=MonAreaLeft
+            mTop:=MonAreaTop
+            mWidth:=(MonAreaRight - MonAreaLeft)
+            mHeight:=(MonAreaBottom - MonAreaTop)
+        }
     }
 }
 ExpandEnvVars(ppath)
