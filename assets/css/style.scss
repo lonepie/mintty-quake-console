@@ -3,5 +3,7 @@
 
 @import "{{site.theme}}";
 
-#logo { display: none; }
-#logo img { }
+#logo { 
+    display: none;
+    img { width: 270px; }
+}
