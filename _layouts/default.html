@@ -16,6 +16,7 @@
     <div class="wrapper">
       <header>
         <a href="{{ site.github.url }}"> <h1>{{ site.title | default: site.github.repository_name }}</h1> </a>
+        <a href="{{ site.github.url }}" id="logo"><img src="{{ '/assets/img/logo.png' | relative-url }}" alt="{{ site.title | default: site.github.repository_name }}" srcset=""></a>
         <p>{{ site.description | default: site.github.project_tagline }}</p>
 
         {% if site.github.is_project_page %}

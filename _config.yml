@@ -27,8 +27,13 @@ theme: jekyll-theme-minimal
 #plugins:
 #  - jekyll-feed
 
-show_downloads: false
+show_downloads: true
 google_analytics: UA-114764190-2
+
+github:
+  releases_url: https://github.com/lonepie/mintty-quake-console/releases
+  zip_url: https://github.com/lonepie/mintty-quake-console/archive/master.zip
+  tar_url: https://github.com/lonepie/mintty-quake-console/archive/master.tar.gz
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
