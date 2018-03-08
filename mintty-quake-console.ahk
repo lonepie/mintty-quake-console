@@ -150,8 +150,13 @@ toggle()
     IfWinActive ahk_pid %hw_mintty%
     {
         Slide("ahk_pid" . hw_mintty, "Out")
-        ; reset focus to last active window
-        WinActivate, ahk_id %hw_current%
+
+        WinGet, hw_current_minmax, MinMax, ahk_id %hw_current%
+        ; don't re-activate last window if we've minimized it
+        if (hw_current_minmax <> -1) {
+            ; reset focus to last active window
+            WinActivate, ahk_id %hw_current%
+        }
     }
     else
     {
