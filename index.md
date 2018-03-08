@@ -5,13 +5,15 @@ layout: default
 
 An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style terminal-on-a-hotkey for [mintty](https://github.com/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X or [Tilda](https://github.com/lanoxx/tilda)/[Guake](http://guake.org/) on Linux)
 
+![Screenshot](assets/img/2018-03-05_18-08-57.png)
+
 ## Requirements
 
 - [mintty](https://github.com/mintty/) (installed through [Cygwin](http://www.cygwin.com), [MSYS](http://www.mingw.org/wiki/MSYS) or [wsltty](https://github.com/mintty/wsltty))
 
 ## Usage
 
-download latest release and run `mintty-quake-console.exe` (or, if you have AutoHotkey installed, run the `mintty-quake-console.ahk` file directly).
+[Download the latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` (or, if you have AutoHotkey installed, run the `mintty-quake-console.ahk` file directly).
 
 right click mintty-quake-console icon in system tray -> "Options"
 
