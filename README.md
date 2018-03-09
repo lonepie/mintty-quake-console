@@ -54,9 +54,13 @@ Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
 **Ctrl+Alt+Numpad(-)** decrease console height
 
+**Ctrl+Alt+]** increase console width
+
+**Ctrl+Alt+[** decrease console width
+
 **Ctrl+Alt+Numpad(/)** toggle window borders
 
-**Ctrl+Alt+Numpad(*)** saves height & window borders state
+**Ctrl+Alt+Numpad(*)** saves height, width & window borders state
 
 **Ctrl+Alt+Numpad(.)** toggle script
 

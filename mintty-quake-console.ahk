@@ -387,21 +387,29 @@ return
         }
     }
 return
-; We'll need to move the window AND calculate width, it's not as simple as height
 ; Decrease Width
-; ^![::
-;     if (widthConsoleWindow >= 20) {
-;         widthConsoleWindow -= 10
-;         WinMove, ahk_pid %hw_mintty%,,,, widthConsoleWindow
-;     }
-; return
+^![::
+    if (widthConsoleWindow >= 20) {
+        widthConsoleWindow -= 5
+        VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+
+        width := ScreenWidth * widthConsoleWindow / 100
+        left := ScreenLeft + ((ScreenWidth - width) /  2)
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%,  ; resize/move
+    }
+return
 ; Increase Width
-; ^!]::
-;     if (widthConsoleWindow <= 100) {
-;         widthConsoleWindow += 10
-;         WinMove, ahk_pid %hw_mintty%,,,, widthConsoleWindow
-;     }
-; return
+^!]::
+    if (widthConsoleWindow < 100) {
+        widthConsoleWindow += 5
+
+        VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+
+        width := ScreenWidth * widthConsoleWindow / 100
+        left := ScreenLeft + ((ScreenWidth - width) /  2)
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%,  ; resize/move
+    }
+return
 ; Toggle window borders
 ^!NumpadDiv::
     WinSet, Style, ^0xC40000, ahk_pid %hw_mintty%
@@ -410,7 +418,7 @@ return
 ; Save Height & border state to ini
 ^!NumpadMult::
     IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
-    ; IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
+    IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
     IniWrite, %windowBorders%, %iniFile%, Display, window_borders
 return
 ; Toggle script on/off
