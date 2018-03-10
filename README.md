@@ -8,7 +8,7 @@ An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style te
 
 ## Usage
 
-[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone this repository and run the `mintty-quake-console.ahk` script directly).
+[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone this repository and run the `mintty-quake-console.ahk` script directly.
 
 **Options:** Right click the mintty-quake-console icon in system tray & select _Options_
 
@@ -44,7 +44,7 @@ Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
 **animation_mode_fade** = set to 1 to use fading animation (in/out)
 
-**window_borders** = set to 1 to keep window borders on mintty
+**window_borders** = set to 1 to keep window borders & title bar on mintty
 
 ## Tips
 
@@ -58,7 +58,7 @@ Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
 **Ctrl+Alt+[** decrease console width
 
-**Ctrl+Alt+Numpad(/)** toggle window borders
+**Ctrl+Alt+Numpad(/)** toggle window borders and titlebar
 
 **Ctrl+Alt+Numpad(*)** saves height, width & window borders state
 
@@ -92,4 +92,3 @@ mintty_args=/bin/zsh -li
 ### Tabs
 
 Use tmux
-

@@ -61,6 +61,7 @@ IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IniRead, windowBorders, %iniFile%, Display, window_borders, 0
+
 if !FileExist(iniFile)
 {
     SaveSettings()
@@ -130,14 +131,13 @@ init()
         Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
         WinWait ahk_pid %hw_mintty%, , 1
         if ErrorLevel {
-          ; WinWait Timed out (WHY?!?)
-          WinGet, hw_mintty, PID, ahk_exe %minttyPath%
+            ; WinWait Timed out (WHY?!?)
+            WinGet, hw_mintty, PID, ahk_exe %minttyPath%
         }
     }
     else {
         WinGet, hw_mintty, PID, ahk_class mintty
     }
-
 
     WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
     toggleScript("init")
@@ -170,7 +170,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global widthConsoleWindow, initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
+    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 
     WinGet, testTrans, Transparent, %Window%
@@ -224,6 +224,7 @@ Slide(Window, Dir)
             dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
             WinMove, %Window%,,, dY
         }
+
         WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
         Sleep, %animationTimeout%
     }
@@ -372,7 +373,7 @@ return
     if (WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-        if (heightConsoleWindow < ScreenHeight) {
+    if (heightConsoleWindow < ScreenHeight) {
             heightConsoleWindow += animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
@@ -468,14 +469,15 @@ SaveSettings()
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
-    IniWrite, %initialHeight%, %iniFile%, Display, initial_height
-    IniWrite, %initialWidth%, %iniFile%, Display, initial_width
+    IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
+    IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
     IniWrite, %initialTrans%, %iniFile%, Display, initial_trans
     IniWrite, %autohide%, %iniFile%, Display, autohide_by_default
     IniWrite, %animationModeSlide%, %iniFile%, Display, animation_mode_slide
     IniWrite, %animationModeFade%, %iniFile%, Display, animation_mode_fade
     IniWrite, %animationStep%, %inifile%, Display, animation_step
     IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
+    IniWrite, %windowBorders%, %iniFile%, Display, window_borders
     CheckWindowsStartup(startWithWindows)
 }
 
@@ -523,9 +525,9 @@ OptionsGui() {
         Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
         Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
         Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
+        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %heightConsoleWindow%
         Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
-        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
+        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %widthConsoleWindow%
 
         Gui, Add, GroupBox, x232 y150 w220 h45 , Animation Type:
         Gui, Add, Radio, x252 y168 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
