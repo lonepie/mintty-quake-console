@@ -170,7 +170,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
+    global widthConsoleWindow, initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 
     WinGet, testTrans, Transparent, %Window%
@@ -196,35 +196,36 @@ Slide(Window, Dir)
     ; Multi monitor support.  Always move to current window
     If (Dir = "In")
     {
-      WinShow %Window%
-      WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
-      WinMove, %Window%, , WinLeft, , ScreenWidth
+        WinShow %Window%
+        width := ScreenWidth * widthConsoleWindow / 100
+        WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
+        WinMove, %Window%, , WinLeft, , width
     }
     Loop
     {
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
-      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
+        outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
-      If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
-         Break
+        If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
+            Break
 
-      if (animationModeFade = 1)
-      {
-          dRate := animationStep/300*255
-          dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
+        if (animationModeFade = 1)
+        {
+            dRate := animationStep/300*255
+            dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
+            dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
 
-          WinSet, Transparent, %dT%, %Window%
-          currentTrans := dT
-      }
-      else
-      {
-          dRate := animationStep
-          dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
-          WinMove, %Window%,,, dY
-      }
-      WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-      Sleep, %animationTimeout%
+            WinSet, Transparent, %dT%, %Window%
+            currentTrans := dT
+        }
+        else
+        {
+            dRate := animationStep
+            dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
+            WinMove, %Window%,,, dY
+        }
+        WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+        Sleep, %animationTimeout%
     }
 
     If (Dir = "In")  {
@@ -395,7 +396,7 @@ return
 
         width := ScreenWidth * widthConsoleWindow / 100
         left := ScreenLeft + ((ScreenWidth - width) /  2)
-        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%,  ; resize/move
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%  ; resize/move
     }
 return
 ; Increase Width
@@ -407,7 +408,7 @@ return
 
         width := ScreenWidth * widthConsoleWindow / 100
         left := ScreenLeft + ((ScreenWidth - width) /  2)
-        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%,  ; resize/move
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%  ; resize/move
     }
 return
 ; Toggle window borders
