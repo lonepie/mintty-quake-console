@@ -1,7 +1,6 @@
 ---
 layout: default
 ---
-# ![mintty-quake-console Screenshot](assets/img/2018-03-05_18-08-57.png)
 
 ## Requirements
 
@@ -9,13 +8,17 @@ layout: default
 
 ## Usage
 
-[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone this repository and run the `mintty-quake-console.ahk` script directly.
+[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone the repository and run the `mintty-quake-console.ahk` script directly.
 
 **Options:** Right click the mintty-quake-console icon in system tray & select _Options_
 
 Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
 **Note:** after editing the ini file, reload the script by right-clicking the tray icon and selecting _Reload_
+
+## Screenshot
+
+![mintty-quake-console Screenshot](assets/img/2018-03-05_18-08-57.png)
 
 ## Ini/Option Reference
 
