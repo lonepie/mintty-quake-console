@@ -1,11 +1,7 @@
 ---
 layout: default
 ---
-# mintty-quake-console
-
-An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style terminal-on-a-hotkey for [mintty](https://github.com/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X or [Tilda](https://github.com/lanoxx/tilda)/[Guake](http://guake.org/) on Linux)
-
-![Screenshot](assets/img/2018-03-05_18-08-57.png)
+# ![mintty-quake-console Screenshot](assets/img/2018-03-05_18-08-57.png)
 
 ## Requirements
 
@@ -13,13 +9,13 @@ An [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style te
 
 ## Usage
 
-[Download the latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` (or, if you have AutoHotkey installed, run the `mintty-quake-console.ahk` file directly).
+[Download latest release](https://github.com/lonepie/mintty-quake-console/releases) and run `mintty-quake-console.exe` **OR**, if you have AutoHotkey installed, clone this repository and run the `mintty-quake-console.ahk` script directly.
 
-right click mintty-quake-console icon in system tray -> "Options"
+**Options:** Right click the mintty-quake-console icon in system tray & select _Options_
 
-press `Ctrl + ~` (or configured keybinding) to toggle console
+Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
-note: after editing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
+**Note:** after editing the ini file, reload the script by right-clicking the tray icon and selecting _Reload_
 
 ## Ini/Option Reference
 
@@ -49,9 +45,25 @@ note: after editing the ini file, reload the script by right-clicking the tray i
 
 **animation_mode_fade** = set to 1 to use fading animation (in/out)
 
+**window_borders** = set to 1 to keep window borders & title bar on mintty
+
 ## Tips
 
-Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
+### Additional Hotkeys
+
+**Ctrl+Alt+Numpad(+)** increase console height
+
+**Ctrl+Alt+Numpad(-)** decrease console height
+
+**Ctrl+Alt+]** increase console width
+
+**Ctrl+Alt+[** decrease console width
+
+**Ctrl+Alt+Numpad(/)** toggle window borders and titlebar
+
+**Ctrl+Alt+Numpad(*)** saves height, width & window borders state
+
+**Ctrl+Alt+Numpad(.)** toggle script
 
 ### Use with [wsltty](https://github.com/mintty/wsltty)
 
@@ -81,11 +93,3 @@ mintty_args=/bin/zsh -li
 ### Tabs
 
 Use tmux
-
-### My mintty settings settings (old)
-
-Download my [minttyrc](https://github.com/lonepie/dotfiles/raw/master/minttyrc) for my font/color settings
-
-```sh
-wget -O ~/.minttyrc https://github.com/lonepie/dotfiles/raw/master/minttyrc
-```
