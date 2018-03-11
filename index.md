@@ -4,6 +4,8 @@ layout: default
 
 # About
 
+This AutoHotKey script implements a hotkey for Quake&trade; console-like dropdown support for the [mintty terminal emulator](https://github.com/mintty/) on Windows.
+
 ## Requirements
 
 - [mintty](https://github.com/mintty/) (installed through [Cygwin](http://www.cygwin.com), [MSYS](http://www.mingw.org/wiki/MSYS) or [wsltty](https://github.com/mintty/wsltty))
