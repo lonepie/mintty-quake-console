@@ -2,6 +2,8 @@
 layout: default
 ---
 
+# About
+
 ## Requirements
 
 - [mintty](https://github.com/mintty/) (installed through [Cygwin](http://www.cygwin.com), [MSYS](http://www.mingw.org/wiki/MSYS) or [wsltty](https://github.com/mintty/wsltty))
