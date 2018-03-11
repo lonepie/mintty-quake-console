@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.6
+; Version: 1.7
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
@@ -44,8 +44,9 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION = 1.6
-iniFile := A_ScriptDir . "\mintty-quake-console.ini"
+VERSION = 1.7
+SCRIPTNAME := "mintty-quake-console"
+iniFile := A_ScriptDir . "\" . SCRIPTNAME . ".ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
@@ -59,6 +60,8 @@ IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
 IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
+IniRead, windowBorders, %iniFile%, Display, window_borders, 0
+
 if !FileExist(iniFile)
 {
     SaveSettings()
@@ -94,10 +97,10 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;               Menu
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-  Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
+  Menu, Tray, Icon, %A_ScriptDir%\%SCRIPTNAME%.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
-Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Tip, %SCRIPTNAME% %VERSION%
 Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Default, Show/Hide
@@ -128,14 +131,13 @@ init()
         Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
         WinWait ahk_pid %hw_mintty%, , 1
         if ErrorLevel {
-          ; WinWait Timed out (WHY?!?)
-          WinGet, hw_mintty, PID, ahk_exe %minttyPath%
+            ; WinWait Timed out (WHY?!?)
+            WinGet, hw_mintty, PID, ahk_exe %minttyPath%
         }
     }
     else {
         WinGet, hw_mintty, PID, ahk_class mintty
     }
-
 
     WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
     toggleScript("init")
@@ -148,8 +150,13 @@ toggle()
     IfWinActive ahk_pid %hw_mintty%
     {
         Slide("ahk_pid" . hw_mintty, "Out")
-        ; reset focus to last active window
-        WinActivate, ahk_id %hw_current%
+
+        WinGet, hw_current_minmax, MinMax, ahk_id %hw_current%
+        ; don't re-activate last window if we've minimized it
+        if (hw_current_minmax <> -1) {
+            ; reset focus to last active window
+            WinActivate, ahk_id %hw_current%
+        }
     }
     else
     {
@@ -163,7 +170,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
+    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 
     WinGet, testTrans, Transparent, %Window%
@@ -172,7 +179,8 @@ Slide(Window, Dir)
         ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
         WinSet, Style, +0x040000, %Window% ; show window border
         WinSet, Transparent, %currentTrans%, %Window%
-        WinSet, Style, -0x040000, %Window% ; hide window border
+        if (!windowBorders)
+            WinSet, Style, -0x040000, %Window% ; hide window border
         ; this problem seems to happen if mintty's transparency is set to "Off"
         ; mintty will lose transparency when the window loses focus, so it's best to just use
         ; mintty's built in transparency setting
@@ -188,35 +196,37 @@ Slide(Window, Dir)
     ; Multi monitor support.  Always move to current window
     If (Dir = "In")
     {
-      WinShow %Window%
-      WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
-      WinMove, %Window%, , WinLeft, , ScreenWidth
+        WinShow %Window%
+        width := ScreenWidth * widthConsoleWindow / 100
+        WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
+        WinMove, %Window%, , WinLeft, , width
     }
     Loop
     {
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
-      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
+        outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
-      If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
-         Break
+        If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
+            Break
 
-      if (animationModeFade = 1)
-      {
-          dRate := animationStep/300*255
-          dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
+        if (animationModeFade = 1)
+        {
+            dRate := animationStep/300*255
+            dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
+            dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
 
-          WinSet, Transparent, %dT%, %Window%
-          currentTrans := dT
-      }
-      else
-      {
-          dRate := animationStep
-          dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
-          WinMove, %Window%,,, dY
-      }
-      WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-      Sleep, %animationTimeout%
+            WinSet, Transparent, %dT%, %Window%
+            currentTrans := dT
+        }
+        else
+        {
+            dRate := animationStep
+            dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
+            WinMove, %Window%,,, dY
+        }
+
+        WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+        Sleep, %animationTimeout%
     }
 
     If (Dir = "In")  {
@@ -237,7 +247,7 @@ toggleScript(state) {
     ; enable/disable script effects, hotkeys, etc
     global
     ; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
-    if(state = "on" or state = "init") {
+    if (state = "on" or state = "init") {
         If !WinExist("ahk_pid" . hw_mintty) {
             init()
             return
@@ -251,7 +261,8 @@ toggleScript(state) {
         currentTrans:=initialTrans
 
         WinHide ahk_pid %hw_mintty%
-        WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
+        if (!windowBorders)
+            WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
@@ -291,7 +302,7 @@ HideWhenInactive:
 return
 
 ToggleVisible:
-    if(isVisible)
+    if (isVisible)
     {
         Slide("ahk_pid" . hw_mintty, "Out")
     }
@@ -303,7 +314,7 @@ ToggleVisible:
 return
 
 ToggleScriptState:
-    if(scriptEnabled)
+    if (scriptEnabled)
         toggleScript("off")
     else
         toggleScript("on")
@@ -317,7 +328,7 @@ ToggleAutoHide:
 return
 
 ConsoleHotkey:
-    If (scriptEnabled) {
+    if (scriptEnabled) {
         IfWinExist ahk_pid %hw_mintty%
         {
             toggle()
@@ -332,7 +343,7 @@ return
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
-        MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
+        MsgBox, 4, %SCRIPTNAME%, Are you sure you want to exit?
         IfMsgBox, No
             return
         toggleScript("off")
@@ -344,7 +355,7 @@ Reload
 return
 
 AboutDlg:
-    MsgBox, 64, About, mintty-quake-console AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
+    MsgBox, 64, About, %SCRIPTNAME% AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
 return
 
 ShowOptionsGui:
@@ -359,10 +370,10 @@ return
 ; IncreaseHeight:
 ^!NumpadAdd::
 ^+=::
-    if(WinActive("ahk_pid" . hw_mintty)) {
+    if (WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-        if(heightConsoleWindow < ScreenHeight) {
+    if (heightConsoleWindow < ScreenHeight) {
             heightConsoleWindow += animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
@@ -371,12 +382,50 @@ return
 ; DecreaseHeight:
 ^!NumpadSub::
 ^+-::
-    if(WinActive("ahk_pid" . hw_mintty)) {
-        if(heightConsoleWindow > 100) {
+    if (WinActive("ahk_pid" . hw_mintty)) {
+        if (heightConsoleWindow > 100) {
             heightConsoleWindow -= animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
+return
+; Decrease Width
+^![::
+    if (widthConsoleWindow >= 20) {
+        widthConsoleWindow -= 5
+        VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+
+        width := ScreenWidth * widthConsoleWindow / 100
+        left := ScreenLeft + ((ScreenWidth - width) /  2)
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%  ; resize/move
+    }
+return
+; Increase Width
+^!]::
+    if (widthConsoleWindow < 100) {
+        widthConsoleWindow += 5
+
+        VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
+
+        width := ScreenWidth * widthConsoleWindow / 100
+        left := ScreenLeft + ((ScreenWidth - width) /  2)
+        WinMove, ahk_pid %hw_mintty%, , %left%, , %width%  ; resize/move
+    }
+return
+; Toggle window borders
+^!NumpadDiv::
+    WinSet, Style, ^0xC40000, ahk_pid %hw_mintty%
+    windowBorders := !windowBorders
+return
+; Save Height & border state to ini
+^!NumpadMult::
+    IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
+    IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
+    IniWrite, %windowBorders%, %iniFile%, Display, window_borders
+return
+; Toggle script on/off
+^!NumpadDot::
+    GoSub, ToggleScriptState
 return
 #IfWinActive
 
@@ -420,14 +469,15 @@ SaveSettings()
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
-    IniWrite, %initialHeight%, %iniFile%, Display, initial_height
-    IniWrite, %initialWidth%, %iniFile%, Display, initial_width
+    IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
+    IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
     IniWrite, %initialTrans%, %iniFile%, Display, initial_trans
     IniWrite, %autohide%, %iniFile%, Display, autohide_by_default
     IniWrite, %animationModeSlide%, %iniFile%, Display, animation_mode_slide
     IniWrite, %animationModeFade%, %iniFile%, Display, animation_mode_fade
     IniWrite, %animationStep%, %inifile%, Display, animation_step
     IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
+    IniWrite, %windowBorders%, %iniFile%, Display, window_borders
     CheckWindowsStartup(startWithWindows)
 }
 
@@ -441,7 +491,7 @@ CheckWindowsStartup(enable) {
         }
     }
     else {
-        if(!enable) {
+        if (!enable) {
             FileDelete, %LinkFile%
         }
     }
@@ -475,9 +525,9 @@ OptionsGui() {
         Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
         Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
         Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
+        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %heightConsoleWindow%
         Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
-        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
+        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %widthConsoleWindow%
 
         Gui, Add, GroupBox, x232 y150 w220 h45 , Animation Type:
         Gui, Add, Radio, x252 y168 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
@@ -492,7 +542,7 @@ OptionsGui() {
         ; Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
     }
     ; Generated using SmartGUI Creator 4.0
-    Gui, Show, h440 w482, TerminalHUD Options
+    Gui, Show, h440 w482, %SCRIPTNAME% Options
     Gui, +LastFound
     GuiID := WinExist()
 
@@ -535,21 +585,21 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-  Coordmode, Mouse, Screen
+    Coordmode, Mouse, Screen
     MouseGetPos,x,y
     SysGet, m, MonitorCount
     ; Iterate through all monitors.
     Loop, %m%
     {   ; Check if the window is on this monitor.
-      SysGet, Mon, Monitor, %A_Index%
-      SysGet, MonArea, MonitorWorkArea, %A_Index%
-    if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
-    {
-    mLeft:=MonAreaLeft
-    mTop:=MonAreaTop
-    mWidth:=(MonAreaRight - MonAreaLeft)
-    mHeight:=(MonAreaBottom - MonAreaTop)
-    }
+        SysGet, Mon, Monitor, %A_Index%
+        SysGet, MonArea, MonitorWorkArea, %A_Index%
+        if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
+        {
+            mLeft:=MonAreaLeft
+            mTop:=MonAreaTop
+            mWidth:=(MonAreaRight - MonAreaLeft)
+            mHeight:=(MonAreaBottom - MonAreaTop)
+        }
     }
 }
 ExpandEnvVars(ppath)
