@@ -42,7 +42,7 @@ Press `Ctrl ~` (or configured keybinding) to toggle mintty.
 
 **initial_width** = width (percentage of screen width) of the mintty console. *Default: 100*
 
-**initial_trans** = transparency (range from 0 to 255) of the mintty console. *Default: 235* **[Deprecated]** I'm told it's better to just use mintty's built-in transparency setting.
+**initial_trans** = transparency (range from 0 to 255) of the mintty console. *Default: 235*
 
 **autohide_by_default** = set to 1 to automatically hide mintty when it loses focus. *Default: 1*
 
