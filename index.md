@@ -38,17 +38,17 @@ Press `Ctrl ~` (or configured keybinding) to toggle mintty.
 
 **start_hidden** = show mintty.exe when script is started (0) or wait for hotkey (1). *Default: 1*
 
-**initial_height** = height (in pixels) of the mintty console. *Default: X*
+**initial_height** = height (in pixels) of the mintty console. *Default: 380*
 
 **initial_width** = width (percentage of screen width) of the mintty console. *Default: 100*
 
-**initial_trans** = transparency (range from 0 to 255) of the mintty console. *Default: X* **[Deprecated]** I'm told it's better to just use mintty's built-in transparency setting.
+**initial_trans** = transparency (range from 0 to 255) of the mintty console. *Default: 235* **[Deprecated]** I'm told it's better to just use mintty's built-in transparency setting.
 
 **autohide_by_default** = set to 1 to automatically hide mintty when it loses focus. *Default: 1*
 
-**animation_step** = number of pixels to shift each step of the slide animation. *Default: X*
+**animation_step** = number of pixels to shift each step of the slide animation. *Default: 20*
 
-**animation_timeout** = how long (in ms) to wait between each animation_step. *Default: X*
+**animation_timeout** = how long (in ms) to wait between each animation_step. *Default: 10*
 
 **animation_mode_slide** = set to 1 to use sliding animation (up/down). *Default: 0*
 
