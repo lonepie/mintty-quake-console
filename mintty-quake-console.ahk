@@ -52,15 +52,17 @@ IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
-IniRead, initialHeight, %iniFile%, Display, initial_height, 380
+IniRead, initialHeight, %iniFile%, Display, initial_height, 400
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, initialTrans, %iniFile%, Display, initial_trans, 235 ; 0-255 stepping
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
-IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
-IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
+IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade, 1
+IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide, 0
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IniRead, windowBorders, %iniFile%, Display, window_borders, 0
+; TODO: implement display on specified monitor
+;IniRead, displayOnMonitor, %iniFile%, Display, display_on_monitor, 0
 
 if !FileExist(iniFile)
 {
