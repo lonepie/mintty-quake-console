@@ -46,6 +46,8 @@ Press `Ctrl + ~` (or configured keybinding) to toggle mintty
 
 **window_borders** = set to 1 to keep window borders & title bar on mintty
 
+**display_on_monitor** = monitor index to display on or 0 for screen that mouse is currently active on. *Default: 0*
+
 ## Tips
 
 ### Additional Hotkeys

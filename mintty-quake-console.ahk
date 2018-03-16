@@ -62,7 +62,7 @@ IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IniRead, windowBorders, %iniFile%, Display, window_borders, 0
 ; TODO: implement display on specified monitor
-;IniRead, displayOnMonitor, %iniFile%, Display, display_on_monitor, 0
+IniRead, displayOnMonitor, %iniFile%, Display, display_on_monitor, 0
 
 if !FileExist(iniFile)
 {
@@ -100,7 +100,7 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
   Menu, Tray, Icon, %A_ScriptDir%\%SCRIPTNAME%.ico
-Menu, Tray, NoStandard
+; Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, %SCRIPTNAME% %VERSION%
 Menu, Tray, Click, 1
@@ -200,7 +200,10 @@ Slide(Window, Dir)
     {
         WinShow %Window%
         width := ScreenWidth * widthConsoleWindow / 100
-        WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
+        if (displayOnMonitor  > 0)
+            WinLeft := ScreenLeft
+        else
+            WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
         WinMove, %Window%, , WinLeft, , width
     }
     Loop
@@ -587,20 +590,33 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-    Coordmode, Mouse, Screen
-    MouseGetPos,x,y
-    SysGet, m, MonitorCount
-    ; Iterate through all monitors.
-    Loop, %m%
-    {   ; Check if the window is on this monitor.
-        SysGet, Mon, Monitor, %A_Index%
-        SysGet, MonArea, MonitorWorkArea, %A_Index%
-        if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
-        {
-            mLeft:=MonAreaLeft
-            mTop:=MonAreaTop
-            mWidth:=(MonAreaRight - MonAreaLeft)
-            mHeight:=(MonAreaBottom - MonAreaTop)
+    global displayOnMonitor
+    if (displayOnMonitor > 0) {
+        SysGet, Mon, Monitor, %displayOnMonitor%
+        SysGet, MonArea, MonitorWorkArea, %displayOnMonitor%
+
+        mLeft:=MonAreaLeft
+        mTop:=MonAreaTop
+        mWidth:=(MonAreaRight - MonAreaLeft)
+        mHeight:=(MonAreaBottom - MonAreaTop)
+    }
+    else {
+        Coordmode, Mouse, Screen
+        MouseGetPos,x,y
+        SysGet, m, MonitorCount
+
+        ; Iterate through all monitors.
+        Loop, %m%
+        {   ; Check if the window is on this monitor.
+            SysGet, Mon, Monitor, %A_Index%
+            SysGet, MonArea, MonitorWorkArea, %A_Index%
+            if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
+            {
+                mLeft:=MonAreaLeft
+                mTop:=MonAreaTop
+                mWidth:=(MonAreaRight - MonAreaLeft)
+                mHeight:=(MonAreaBottom - MonAreaTop)
+            }
         }
     }
 }
