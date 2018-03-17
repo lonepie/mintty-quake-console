@@ -47,6 +47,10 @@ cygwinBinDir := cygwinRootDir . "\bin"
 VERSION = 1.7
 SCRIPTNAME := "mintty-quake-console"
 iniFile := A_ScriptDir . "\" . SCRIPTNAME . ".ini"
+localIniFile := StrReplace(iniFile, ".ini", ".local.ini")
+if (FileExist(localIniFile)) {
+  iniFile := localIniFile
+}
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
@@ -61,7 +65,6 @@ IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide, 0
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IniRead, windowBorders, %iniFile%, Display, window_borders, 0
-; TODO: implement display on specified monitor
 IniRead, displayOnMonitor, %iniFile%, Display, display_on_monitor, 0
 
 if !FileExist(iniFile)
