@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.7
+; Version: 1.8
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
@@ -44,7 +44,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION = 1.7
+VERSION = 1.8
 SCRIPTNAME := "mintty-quake-console"
 iniFile := A_ScriptDir . "\" . SCRIPTNAME . ".ini"
 localIniFile := StrReplace(iniFile, ".ini", ".local.ini")
@@ -103,7 +103,7 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
   Menu, Tray, Icon, %A_ScriptDir%\%SCRIPTNAME%.ico
-; Menu, Tray, NoStandard
+Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, %SCRIPTNAME% %VERSION%
 Menu, Tray, Click, 1
@@ -116,6 +116,7 @@ if (autohide)
     Menu, Tray, Check, Auto-Hide
 Menu, Tray, Add
 Menu, Tray, Add, Options, ShowOptionsGui
+Menu, Tray, Add, Edit Config, EditSettings
 Menu, Tray, Add, About, AboutDlg
 Menu, Tray, Add, Reload, ReloadSub
 Menu, Tray, Add, Exit, ExitSub
@@ -368,6 +369,13 @@ return
 
 ShowOptionsGui:
     OptionsGui()
+return
+
+EditSettings:
+EnvGet, envEditor, Editor
+if (StrLen(Trim(envEditor)) == 0)
+    envEditor := "notepad.exe"
+Run, %envEditor% %iniFile%
 return
 
 ;*******************************************************************************

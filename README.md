@@ -19,8 +19,8 @@ Press `Ctrl ~` (or configured keybinding) to toggle mintty.
 
 ## Screenshots
 
-![mintty-quake-console Screenshot](assets/img/2018-03-05_18-08-57.png)
-![mintty-quake-console Screencap](assets/img/optimized.gif)
+![mintty-quake-console Screenshot](https://lonepie.github.io/mintty-quake-console/assets/img/2018-03-05_18-08-57.png)
+![mintty-quake-console Screencap](https://lonepie.github.io/mintty-quake-console/assets/img/optimized.gif)
 *Note: the animation is much more fluid than shown here (the capture software didn't play nice with it).*
 
 ## Ini/Option Reference
@@ -53,7 +53,17 @@ Press `Ctrl ~` (or configured keybinding) to toggle mintty.
 
 **window_borders** = set to 1 to keep window borders & title bar on mintty. *Default: 0*
 
+**display_on_monitor** = in multiple-monitor setups, the monitor that mintty will appear on. 0 will make mintty display on whichever monitor the mouse cursor currently resides on. 1 for primary display, 2 for secondary, etc. *Default: 0*
+
 ## Tips
+
+### Local Configuration File
+
+Support for `mintty-quake-console.local.ini` file (also in .gitignore), so you can have a custom config without dirtying the repository.
+
+### Edit Config Directly
+
+Added a menu entry to directly edit the config file with notepad (or whatever is defined by %EDITOR% env var)
 
 ### Additional Hotkeys
 
