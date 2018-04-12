@@ -1,5 +1,5 @@
 ; Mintty quake console: Visor-like functionality for Windows
-; Version: 1.7
+; Version: 1.8
 ; Author: Jon Rogers (lonepie@gmail.com)
 ; URL: https://github.com/lonepie/mintty-quake-console
 ; Credits:
@@ -44,23 +44,28 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
-VERSION = 1.7
+VERSION = 1.8
 SCRIPTNAME := "mintty-quake-console"
 iniFile := A_ScriptDir . "\" . SCRIPTNAME . ".ini"
+localIniFile := StrReplace(iniFile, ".ini", ".local.ini")
+if (FileExist(localIniFile)) {
+  iniFile := localIniFile
+}
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
-IniRead, initialHeight, %iniFile%, Display, initial_height, 380
+IniRead, initialHeight, %iniFile%, Display, initial_height, 400
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, initialTrans, %iniFile%, Display, initial_trans, 235 ; 0-255 stepping
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
-IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
-IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
+IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade, 1
+IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide, 0
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IniRead, windowBorders, %iniFile%, Display, window_borders, 0
+IniRead, displayOnMonitor, %iniFile%, Display, display_on_monitor, 0
 
 if !FileExist(iniFile)
 {
@@ -111,6 +116,7 @@ if (autohide)
     Menu, Tray, Check, Auto-Hide
 Menu, Tray, Add
 Menu, Tray, Add, Options, ShowOptionsGui
+Menu, Tray, Add, Edit Config, EditSettings
 Menu, Tray, Add, About, AboutDlg
 Menu, Tray, Add, Reload, ReloadSub
 Menu, Tray, Add, Exit, ExitSub
@@ -198,7 +204,10 @@ Slide(Window, Dir)
     {
         WinShow %Window%
         width := ScreenWidth * widthConsoleWindow / 100
-        WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
+        if (displayOnMonitor  > 0)
+            WinLeft := ScreenLeft
+        else
+            WinLeft := ScreenLeft + (1 - widthConsoleWindow/100) * ScreenWidth / 2
         WinMove, %Window%, , WinLeft, , width
     }
     Loop
@@ -360,6 +369,13 @@ return
 
 ShowOptionsGui:
     OptionsGui()
+return
+
+EditSettings:
+EnvGet, envEditor, Editor
+if (StrLen(Trim(envEditor)) == 0)
+    envEditor := "notepad.exe"
+Run, %envEditor% %iniFile%
 return
 
 ;*******************************************************************************
@@ -585,20 +601,33 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-    Coordmode, Mouse, Screen
-    MouseGetPos,x,y
-    SysGet, m, MonitorCount
-    ; Iterate through all monitors.
-    Loop, %m%
-    {   ; Check if the window is on this monitor.
-        SysGet, Mon, Monitor, %A_Index%
-        SysGet, MonArea, MonitorWorkArea, %A_Index%
-        if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
-        {
-            mLeft:=MonAreaLeft
-            mTop:=MonAreaTop
-            mWidth:=(MonAreaRight - MonAreaLeft)
-            mHeight:=(MonAreaBottom - MonAreaTop)
+    global displayOnMonitor
+    if (displayOnMonitor > 0) {
+        SysGet, Mon, Monitor, %displayOnMonitor%
+        SysGet, MonArea, MonitorWorkArea, %displayOnMonitor%
+
+        mLeft:=MonAreaLeft
+        mTop:=MonAreaTop
+        mWidth:=(MonAreaRight - MonAreaLeft)
+        mHeight:=(MonAreaBottom - MonAreaTop)
+    }
+    else {
+        Coordmode, Mouse, Screen
+        MouseGetPos,x,y
+        SysGet, m, MonitorCount
+
+        ; Iterate through all monitors.
+        Loop, %m%
+        {   ; Check if the window is on this monitor.
+            SysGet, Mon, Monitor, %A_Index%
+            SysGet, MonArea, MonitorWorkArea, %A_Index%
+            if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
+            {
+                mLeft:=MonAreaLeft
+                mTop:=MonAreaTop
+                mWidth:=(MonAreaRight - MonAreaLeft)
+                mHeight:=(MonAreaBottom - MonAreaTop)
+            }
         }
     }
 }

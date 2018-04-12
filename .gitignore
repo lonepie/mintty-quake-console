@@ -1,3 +1,4 @@
-
-mintty-quake-console.exe
+*.exe
 *.zip
+*.code-workspace
+mintty-quake-console.local.ini
