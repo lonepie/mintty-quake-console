@@ -56,6 +56,7 @@ IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
+IniRead, alwaysOnTop, %iniFile%, Display, always_on_top, 0
 IniRead, initialHeight, %iniFile%, Display, initial_height, 400
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, initialTrans, %iniFile%, Display, initial_trans, 235 ; 0-255 stepping
@@ -147,6 +148,7 @@ init()
 
     WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
     toggleScript("init")
+    setAlwaysOnTop()
 }
 
 toggle()
@@ -156,21 +158,23 @@ toggle()
     IfWinActive ahk_pid %hw_mintty%
     {
         Slide("ahk_pid" . hw_mintty, "Out")
-
-        WinGet, hw_current_minmax, MinMax, ahk_id %hw_current%
-        ; don't re-activate last window if we've minimized it
-        if (hw_current_minmax <> -1) {
-            ; reset focus to last active window
-            WinActivate, ahk_id %hw_current%
-        }
+        ; reset focus to last active window
+        WinActivate, ahk_id %hw_current%
     }
     else
     {
         ; get last active window
         WinGet, hw_current, ID, A
 
-        WinActivate ahk_pid %hw_mintty%
-        Slide("ahk_pid" . hw_mintty, "In")
+        if (!alwaysOnTop || (alwaysOnTop && !isVisible)) {
+            WinActivate ahk_pid %hw_mintty%
+            Slide("ahk_pid" . hw_mintty, "In")
+        }
+        else if (isVisible) {
+            Slide("ahk_pid" . hw_mintty, "Out")
+            ; reset focus to last active window
+            WinActivate, ahk_id %hw_current%
+        }
     }
 }
 
@@ -485,6 +489,7 @@ SaveSettings()
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
+    IniWrite, %alwaysOnTop%, %iniFile%, Display, always_on_top
     IniWrite, %heightConsoleWindow%, %iniFile%, Display, initial_height
     IniWrite, %widthConsoleWindow%, %iniFile%, Display, initial_width
     IniWrite, %initialTrans%, %iniFile%, Display, initial_trans
@@ -495,6 +500,7 @@ SaveSettings()
     IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
     IniWrite, %windowBorders%, %iniFile%, Display, window_borders
     CheckWindowsStartup(startWithWindows)
+    setAlwaysOnTop()
 }
 
 CheckWindowsStartup(enable) {
@@ -510,6 +516,17 @@ CheckWindowsStartup(enable) {
         if (!enable) {
             FileDelete, %LinkFile%
         }
+    }
+}
+
+setAlwaysOnTop() {
+    ; set always on top depending on preference
+    global alwaysOnTop
+    if (alwaysOnTop) {
+        Winset, AlwaysOnTop, On
+    }
+    else {
+        Winset, AlwaysOnTop, Off
     }
 }
 
@@ -540,10 +557,11 @@ OptionsGui() {
         Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
         Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
         Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
-        Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %heightConsoleWindow%
-        Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
-        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %widthConsoleWindow%
+        Gui, Add, CheckBox, x22 y239 w100 h30 ValwaysOnTop Checked%alwaysOnTop%, Always On Top
+        Gui, Add, Text, x22 y280 w100 h20 , Initial Height (px):
+        Gui, Add, Edit, x22 y300 w100 h20 VinitialHeight, %initialHeight%
+        Gui, Add, Text, x22 y330 w115 h20 , Initial Width (percent):
+        Gui, Add, Edit, x22 y350 w100 h20 VinitialWidth, %initialWidth%
 
         Gui, Add, GroupBox, x232 y150 w220 h45 , Animation Type:
         Gui, Add, Radio, x252 y168 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
