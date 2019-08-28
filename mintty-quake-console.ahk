@@ -54,6 +54,7 @@ if (FileExist(localIniFile)) {
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
+IniRead, transHotkey, %iniFile%, General, transhotkey, ^+``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, alwaysOnTop, %iniFile%, Display, always_on_top, 0
@@ -93,11 +94,14 @@ heightConsoleWindow := initialHeight
 widthConsoleWindow := initialWidth
 
 isVisible := False
+semiTrans := 255
+semiTransLevel := 225
 
 ;*******************************************************************************
 ;               Hotkeys
 ;*******************************************************************************
 Hotkey, %consoleHotkey%, ConsoleHotkey
+Hotkey, %transHotkey%, TransHotkey
 
 ;*******************************************************************************
 ;               Menu
@@ -150,6 +154,23 @@ init()
     toggleScript("init")
     setAlwaysOnTop()
 }
+    ;    WinSet, Transparent, %dT%, %Window%
+
+toggle_trans()
+{
+	global
+	if (isVisible)
+	{
+		if (semiTrans==initialTrans)
+		{
+			semiTrans := semiTransLevel
+		} else {
+			semiTrans := initialTrans
+		}
+		WinSet, Transparent, %semiTrans%, %Window%
+		currentTrans := semiTrans
+	}
+}
 
 toggle()
 {
@@ -180,7 +201,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
+    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans, semiTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 
     WinGet, testTrans, Transparent, %Window%
@@ -216,7 +237,7 @@ Slide(Window, Dir)
     }
     Loop
     {
-        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
+        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == semiTrans)
         outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
         If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
@@ -226,7 +247,7 @@ Slide(Window, Dir)
         {
             dRate := animationStep/300*255
             dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-            dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
+            dT := (dT < 0) ? 0 : ((dT > semiTrans) ? semiTrans : dT)
 
             WinSet, Transparent, %dT%, %Window%
             currentTrans := dT
@@ -271,7 +292,6 @@ toggleScript(state) {
         if (minttyTrans <> "")
             initialTrans:=minttyTrans
         WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
-        currentTrans:=initialTrans
 
         WinHide ahk_pid %hw_mintty%
         if (!windowBorders)
@@ -349,6 +369,15 @@ ConsoleHotkey:
         else
         {
             init()
+        }
+    }
+return
+
+TransHotkey:
+    if (scriptEnabled) {
+        IfWinExist ahk_pid %hw_mintty%
+        {
+            toggle_trans()
         }
     }
 return
@@ -484,9 +513,11 @@ SaveSettings()
     Else
     {
         consoleHotkey = ^``
+        transHotkey = ^+``
     }
 
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
+    IniWrite, %transHotkey%, %iniFile%, General, transhotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
     IniWrite, %alwaysOnTop%, %iniFile%, Display, always_on_top
