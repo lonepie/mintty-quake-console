@@ -95,7 +95,7 @@ widthConsoleWindow := initialWidth
 
 isVisible := False
 semiTrans := 255
-semiTransLevel := 225
+semiTransLevel := 215
 
 ;*******************************************************************************
 ;               Hotkeys
@@ -295,8 +295,10 @@ toggleScript(state) {
 
         WinHide ahk_pid %hw_mintty%
         if (!windowBorders)
+		{
+            WinSet, ExStyle, +0x80, ahk_pid %hw_mintty% ; Tool window
             WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
-
+		}
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
         width := ScreenWidth * widthConsoleWindow / 100
@@ -315,6 +317,7 @@ toggleScript(state) {
         Slide("ahk_pid" . hw_mintty, "In")
     }
     else if (state = "off") {
+			WinSet, ExStyle, -0x80, ahk_pid %hw_mintty% ; Tool window
             WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
         if (OrigYpos >= 0)
             WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
@@ -418,25 +421,37 @@ return
 ; why this method doesn't work, I don't know...
 ; IncreaseHeight:
 ^!NumpadAdd::
-^+=::
+^!=::
     if (WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
     if (heightConsoleWindow < ScreenHeight) {
-            heightConsoleWindow += animationStep
+            heightConsoleWindow += 50
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
 return
 ; DecreaseHeight:
 ^!NumpadSub::
-^+-::
+^!-::
     if (WinActive("ahk_pid" . hw_mintty)) {
         if (heightConsoleWindow > 100) {
-            heightConsoleWindow -= animationStep
+            heightConsoleWindow -= 50
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
+return
+; Fullscreen toggle:
+!Enter::
+    if (WinActive("ahk_pid" . hw_mintty)) {
+		WinGet, IsMaximized, MinMax, ahk_pid %hw_mintty%
+		if (IsMaximized) {
+			WinRestore
+		} else 
+		{
+			WinMaximize
+		}
+	}
 return
 ; Decrease Width
 ^![::
