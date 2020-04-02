@@ -54,7 +54,6 @@ if (FileExist(localIniFile)) {
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
-IniRead, transHotkey, %iniFile%, General, transhotkey, ^+``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, alwaysOnTop, %iniFile%, Display, always_on_top, 0
@@ -94,14 +93,11 @@ heightConsoleWindow := initialHeight
 widthConsoleWindow := initialWidth
 
 isVisible := False
-semiTrans := 255
-semiTransLevel := 215
 
 ;*******************************************************************************
 ;               Hotkeys
 ;*******************************************************************************
 Hotkey, %consoleHotkey%, ConsoleHotkey
-Hotkey, %transHotkey%, TransHotkey
 
 ;*******************************************************************************
 ;               Menu
@@ -154,23 +150,6 @@ init()
     toggleScript("init")
     setAlwaysOnTop()
 }
-    ;    WinSet, Transparent, %dT%, %Window%
-
-toggle_trans()
-{
-	global
-	if (isVisible)
-	{
-		if (semiTrans==initialTrans)
-		{
-			semiTrans := semiTransLevel
-		} else {
-			semiTrans := initialTrans
-		}
-		WinSet, Transparent, %semiTrans%, %Window%
-		currentTrans := semiTrans
-	}
-}
 
 toggle()
 {
@@ -201,7 +180,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans, semiTrans
+    global widthConsoleWindow, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 
     WinGet, testTrans, Transparent, %Window%
@@ -237,7 +216,7 @@ Slide(Window, Dir)
     }
     Loop
     {
-        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == semiTrans)
+        inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
         outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
         If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
@@ -247,7 +226,7 @@ Slide(Window, Dir)
         {
             dRate := animationStep/300*255
             dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-            dT := (dT < 0) ? 0 : ((dT > semiTrans) ? semiTrans : dT)
+            dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
 
             WinSet, Transparent, %dT%, %Window%
             currentTrans := dT
@@ -292,13 +271,12 @@ toggleScript(state) {
         if (minttyTrans <> "")
             initialTrans:=minttyTrans
         WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
+        currentTrans:=initialTrans
 
         WinHide ahk_pid %hw_mintty%
         if (!windowBorders)
-		{
-            WinSet, ExStyle, +0x80, ahk_pid %hw_mintty% ; Tool window
             WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
-		}
+
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
         width := ScreenWidth * widthConsoleWindow / 100
@@ -317,7 +295,6 @@ toggleScript(state) {
         Slide("ahk_pid" . hw_mintty, "In")
     }
     else if (state = "off") {
-			WinSet, ExStyle, -0x80, ahk_pid %hw_mintty% ; Tool window
             WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
         if (OrigYpos >= 0)
             WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
@@ -376,15 +353,6 @@ ConsoleHotkey:
     }
 return
 
-TransHotkey:
-    if (scriptEnabled) {
-        IfWinExist ahk_pid %hw_mintty%
-        {
-            toggle_trans()
-        }
-    }
-return
-
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
@@ -421,37 +389,25 @@ return
 ; why this method doesn't work, I don't know...
 ; IncreaseHeight:
 ^!NumpadAdd::
-^!=::
+^+=::
     if (WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
     if (heightConsoleWindow < ScreenHeight) {
-            heightConsoleWindow += 50
+            heightConsoleWindow += animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
 return
 ; DecreaseHeight:
 ^!NumpadSub::
-^!-::
+^+-::
     if (WinActive("ahk_pid" . hw_mintty)) {
         if (heightConsoleWindow > 100) {
-            heightConsoleWindow -= 50
+            heightConsoleWindow -= animationStep
             WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
         }
     }
-return
-; Fullscreen toggle:
-!Enter::
-    if (WinActive("ahk_pid" . hw_mintty)) {
-		WinGet, IsMaximized, MinMax, ahk_pid %hw_mintty%
-		if (IsMaximized) {
-			WinRestore
-		} else 
-		{
-			WinMaximize
-		}
-	}
 return
 ; Decrease Width
 ^![::
@@ -528,11 +484,9 @@ SaveSettings()
     Else
     {
         consoleHotkey = ^``
-        transHotkey = ^+``
     }
 
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
-    IniWrite, %transHotkey%, %iniFile%, General, transhotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
     IniWrite, %alwaysOnTop%, %iniFile%, Display, always_on_top
