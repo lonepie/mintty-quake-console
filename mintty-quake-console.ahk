@@ -41,6 +41,9 @@ SetWinDelay, -1
 RegRead, cygwinRootDir, HKEY_LOCAL_MACHINE, SOFTWARE\Cygwin\setup, rootdir
 cygwinBinDir := cygwinRootDir . "\bin"
 
+; force process to be DPI aware
+DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+
 ;*******************************************************************************
 ;               Preferences & Variables
 ;*******************************************************************************
